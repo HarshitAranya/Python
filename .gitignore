@@ -1,0 +1,4 @@
+*.docx
+AutoOCR/Lib/
+AutoOCR/Scripts/
+AutoOCR/pyvenv.cfg
