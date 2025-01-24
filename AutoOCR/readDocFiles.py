@@ -3,6 +3,9 @@ import sys
 from datetime import datetime
 import time
 import win32com.client
+import json
+import subprocess
+import logging
 
 # Get the directory where the .exe file is located
 currentDate = datetime.now()
@@ -13,7 +16,7 @@ docx_files = [f for f in os.listdir(current_directory) if f.endswith('.docx')]
 
 if(len(docx_files) == 0):
     print("No file found in current directory!!")
-    time.sleep(5)
+    time.sleep(3)
     sys.exit(0)
 
 files_with_path = []
@@ -25,14 +28,51 @@ for docFile in docx_files:
         fileDate = file_Datetime.strftime('%d-%b-%Y')
         print(f"File Date :{fileDate} | File name :{docFile}")
 
-oneFile1 = files_with_path[0]
-oneFile2 = files_with_path[1]
-# print(oneFile1)
-# print(oneFile2)
 todaysDate = currentDate.strftime('%d-%b-%Y')
 print(f"Today's Date :{todaysDate}")
 
+def jsonCreator(
+    ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity
+):
+    data = {
+        "OCRTitle": ocrFullTitle,        
+        "OCRNo": ocrNO,
+        "Desc": desc,
+        "OCRType": ocrType,
+        "OCRDocType": ocrDocType,
+        "Priority": severity,
+    }
+
+    # Save the dictionary to a JSON file
+    json_file = 'data.json'
+    with open(json_file, 'w') as f:
+        json.dump(data, f)
+
+    print(f"JSON file '{json_file}' created/updated successfully.")
+
+# Adjust paths for bundled files
+def resource_path(relative_path):
+    """Get the absolute path to a resource, accounting for PyInstaller bundling."""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+ps_CWI = resource_path("CreateWI.ps1")
+
 def docReader(oneFileName):
+
+    # Initialize all variables inside the function
+    ocrNO = ""
+    ocrTitle = ""
+    csdNo = ""
+    gitNo = ""
+    desc = ""
+    ocrDocType = ""
+    severity = ""
+    ocrType = ""
+    executionType = []
     
     word = win32com.client.Dispatch("Word.Application")
     if word.Documents.Count >0:
@@ -40,39 +80,102 @@ def docReader(oneFileName):
         # doc.Close(False)
         # word.Quit()
         print("Please keep close all the word document and run it again.")
-        time.sleep(5)
+        time.sleep(3)
         sys.exit(0)
-
+    else:
+        word.Visible = False
     try:
         doc = word.Documents.Open(oneFileName)
     except Exception as e:
         print(f"Error opening document: {e}")
+        return
 
     paragraph_dict = {}
-    # # Loop through all paragraphs and print index and text
-    # # x=1
+    # Loop through all paragraphs and print index and text
     for index, paragraph in enumerate(doc.Paragraphs, start=1):
-        # if index in prange:
         ptext = paragraph.Range.Text.strip()
         ptext = ptext.replace('\r', '').replace('\x07', '')
         paragraph_dict[index] = ptext
 
     # print(paragraph_dict)    
-        #     # x += 1
     for key, value in paragraph_dict.items():
         # print(f"{key}: {value}")
-        if "Operational Change Request" in value:
+        if "Reference" in value:
             # print(f"{key}: {value}")
-            header = paragraph_dict[key]     
-            print(header)
-            doc.Close(False)
-            word.Quit()
-            # word.Visible = True
-    # return ""     
+            ocrNO = paragraph_dict[key+1]
+            # print(ocrNO)
+        if "Title" in value:
+            ocrTitle = paragraph_dict[key+1]
+        if "Manual Treatment" in value:
+            for i in range(key, key+5):
+                executionType.append(paragraph_dict[i])
+        if "CSD reference" in value:
+            csdNo = paragraph_dict[key+1]
+        if "Commit Number" in value:
+            gitNo = paragraph_dict[key+1]
+        if "Data/Code" in value:
+            ocrDocType = paragraph_dict[key+1]
+        if "Severity" in value:
+            severity = paragraph_dict[key+1]
+            
+    if(ocrNO and ocrTitle):
+        # print(f"{key}: {value}")
+        ocrFullTitle = f'{ocrNO} : {ocrTitle}'
+    else:
+        print("Error: One or more variables are not set. Check OCR_No OR Title")
+        doc.Close(False)
+        word.Quit()
+        time.sleep(3)
+        return
 
-docReader(oneFile1)
-"""
-# def get_ocr_values():
-#     return ocrNO, csdNo, gitNo, rocrType, sqlFiles, desc, ocrDocType, ocrTitle, severity, fstartDate, fendDate
+    if(csdNo and gitNo):
+        desc = f'{ocrNO},{csdNo},{gitNo}'
+    else:
+        print("Error: One or more variables are not set. Check OCR_No/CSD_No OR GIT_No")
+        doc.Close(False)
+        word.Quit()
+        time.sleep(3)
+        return      
+    for box in executionType:
+        # print(box)
+        if "☒ - Yes" in box:
+            ocrType = "Manual"
+        if "☒ - No" in box:
+            ocrType = "Auto"
 
-"""
+    doc.Close(False)
+    word.Quit()
+    # Check if all variables are set (non-empty and not None)
+    if all([ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity]):
+        # Call jsonCreator only if all variables are set
+        jsonCreator(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
+    else:
+        print("Error: One or more variables are not set.")
+
+    ps_command = f'Set-ExecutionPolicy Bypass -Scope Process -Force; . "{ps_CWI}"'
+    result = subprocess.run(
+        ['powershell', '-NoProfile', '-Command', ps_command],
+        capture_output=True,
+        text=True
+    )
+
+    # Handle PowerShell output
+    logging.info(f"PowerShell Output: {result.stdout}")
+    # logging.info(result.stdout)
+    if result.returncode != 0:
+        # logging.error("PowerShell Script Error:")
+        logging.error(f"PowerShell Script Error: {result.stderr}")
+        # logging.error(result.stderr)
+        print("PowerShell script execution failed. Check the logs for more details.")
+ 
+for oneFile in files_with_path:
+    print(f"Working on: {oneFile}")
+    docReader(oneFile)
+
+time.sleep(5)
+sys.exit(0)
+# scripts\activate
+# pyinstaller --onefile --add-data "GetWI.ps1;." --add-data "CreateWI.ps1;." main.py
+# pip install pywin32-308-cp312-cp312-win_amd64.whl
+# pip install --no-index --find-links=./ .\setuptools-75.8.0-py3-none-any.whl
+# pip install --no-index --find-links=./ whls\pywin32-308-cp312-cp312-win_amd64.whl
