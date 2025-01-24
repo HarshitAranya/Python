@@ -172,10 +172,11 @@ for oneFile in files_with_path:
     print(f"Working on: {oneFile}")
     docReader(oneFile)
 
-time.sleep(5)
+time.sleep(10)
 sys.exit(0)
 # scripts\activate
-# pyinstaller --onefile --add-data "GetWI.ps1;." --add-data "CreateWI.ps1;." main.py
+# pyinstaller --onefile --add-data "GetWI.ps1;." --add-data "CreateWI.ps1;." readDocFiles.py
 # pip install pywin32-308-cp312-cp312-win_amd64.whl
 # pip install --no-index --find-links=./ .\setuptools-75.8.0-py3-none-any.whl
 # pip install --no-index --find-links=./ whls\pywin32-308-cp312-cp312-win_amd64.whl
+# pip install --no-index --find-links=./ Azure_APIM\whls\pyinstaller_hooks_contrib-2024.11-py3-none-any.whl

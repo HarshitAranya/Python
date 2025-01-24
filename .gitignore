@@ -3,3 +3,6 @@ AutoOCR/Lib/
 AutoOCR/Scripts/
 AutoOCR/pyvenv.cfg
 *.json
+build/
+dist/
+readDocFiles.spec
