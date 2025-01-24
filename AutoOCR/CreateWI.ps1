@@ -44,7 +44,7 @@ function Create-WorkItem {
     # Execute the POST Request
     try {
         $response = Invoke-RestMethod -Uri $url -Headers $Headers -Method POST -Body $Body
-        Write-Host "Work Item Created Successfully. ID: $($response.id)" -ForegroundColor Green
+        Write-Host "$($Tags) | Work Item Created Successfully. ID: $($response.id)" -ForegroundColor Green
         # Write-Output $response
     }
     catch {

@@ -81,6 +81,7 @@ def docReader(oneFileName):
         # word.Quit()
         print("Please keep close all the word document and run it again.")
         time.sleep(3)
+        input("\nPress Enter to exit...")
         sys.exit(0)
     else:
         word.Visible = False
@@ -160,19 +161,22 @@ def docReader(oneFileName):
     )
 
     # Handle PowerShell output
-    logging.info(f"PowerShell Output: {result.stdout}")
-    # logging.info(result.stdout)
+    logging.info(f"PowerShell Output:")
+    logging.info(result.stdout)
+    print("PowerShell Output:")
+    print(result.stdout)  # Displaying the PowerShell output
+
     if result.returncode != 0:
-        # logging.error("PowerShell Script Error:")
         logging.error(f"PowerShell Script Error: {result.stderr}")
-        # logging.error(result.stderr)
-        print("PowerShell script execution failed. Check the logs for more details.")
+        print("PowerShell Error:")
+        print(result.stderr)
  
 for oneFile in files_with_path:
     print(f"Working on: {oneFile}")
     docReader(oneFile)
 
-time.sleep(10)
+input("\nPress Enter to exit...")
+# time.sleep(10)
 sys.exit(0)
 # scripts\activate
 # pyinstaller --onefile --add-data "GetWI.ps1;." --add-data "CreateWI.ps1;." readDocFiles.py
