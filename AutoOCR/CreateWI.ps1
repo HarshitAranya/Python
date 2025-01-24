@@ -19,12 +19,10 @@ function Create-WorkItem {
     }
 
     # API Endpoint
-    $Organization = "civica-cp"
-    $Project = "CE"
+    $Organization = "organization"
+    $Project = "project"
     $url = "https://dev.azure.com/$Organization/$Project/_apis/wit/workitems/$"+"${Type}?api-version=7.1"
 
-    # API Endpoint
-    #$url = "https://dev.azure.com/civica-cp/CE/_apis/wit/workitems/${Type}?api-version=7.1"
 
     # Request Body for creating the Work Item
     $Body = @(
@@ -68,13 +66,13 @@ $OCRTitle = $jsonContent.OCRTitle
 $AssignedTo = ""  # User to whom the task will be assigned
 $State = "New"  # State of the work item
 $Tags = $jsonContent.OCRNo
-$AreaPath = "CE\CJS Change Management"
-$iterationPath = "CE\CJS Change Management\CJS Change Management 2024"
+$AreaPath = "Dummy"
+$iterationPath = "CE\Dummy\Dummy 2024"
 $Desc = $jsonContent.Desc
 $OCRType = $jsonContent.OCRType
 $OCRDocType = $jsonContent.OCRDocType #Data for Functional Area
 $Priority = $jsonContent.Priority
-$PAT = "CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO"
+$PAT = "UPDATEIT"
 $Type = "User Story"
 
 if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
