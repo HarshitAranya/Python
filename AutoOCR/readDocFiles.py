@@ -42,9 +42,12 @@ def jsonCreator(
         "OCRDocType": ocrDocType,
         "Priority": severity,
     }
+    # Overwrite the JSON file with an empty dictionary before updating with new data
+    json_file = 'data.json'
+    with open(json_file, 'w') as f:
+        json.dump({}, f)  # Clear the file by writing an empty dictionary
 
     # Save the dictionary to a JSON file
-    json_file = 'data.json'
     with open(json_file, 'w') as f:
         json.dump(data, f)
 
@@ -101,16 +104,16 @@ def docReader(oneFileName):
     # print(paragraph_dict)    
     for key, value in paragraph_dict.items():
         # print(f"{key}: {value}")
-        if "Reference" in value:
+        if "Reference" in value and "CSD" not in value:
             # print(f"{key}: {value}")
             ocrNO = paragraph_dict[key+1]
-            # print(ocrNO)
         if "Title" in value:
+            # print(f"{key}: {value}")
             ocrTitle = paragraph_dict[key+1]
         if "Manual Treatment" in value:
             for i in range(key, key+5):
-                executionType.append(paragraph_dict[i])
-        if "CSD reference" in value:
+                executionType.append(paragraph_dict[i])        
+        if "CSD" in value and "reference" in value.lower():
             csdNo = paragraph_dict[key+1]
         if "Commit Number" in value:
             gitNo = paragraph_dict[key+1]
@@ -118,9 +121,7 @@ def docReader(oneFileName):
             ocrDocType = paragraph_dict[key+1]
         if "Severity" in value:
             severity = paragraph_dict[key+1]
-            
     if(ocrNO and ocrTitle):
-        # print(f"{key}: {value}")
         ocrFullTitle = f'{ocrNO} : {ocrTitle}'
     else:
         print("Error: One or more variables are not set. Check OCR_No OR Title")
@@ -128,25 +129,45 @@ def docReader(oneFileName):
         word.Quit()
         time.sleep(3)
         return
+    if ocrDocType.lower() == "data":        
 
-    if(csdNo and gitNo):
-        desc = f'{ocrNO},{csdNo},{gitNo}'
+        if(csdNo and gitNo):
+            desc = f'{ocrNO},{csdNo},{gitNo}'
+        else:
+            print("Error: One or more variables are not set. Check OCR_No/CSD_No OR GIT_No")
+            doc.Close(False)
+            word.Quit()
+            time.sleep(3)
+            return
+        
+        for box in executionType:
+            # print(box)
+            if "☒ - Yes" in box:
+                ocrType = "Manual"
+            if "☒ - No" in box:
+                ocrType = "Auto"                
+    elif ocrDocType.lower() == "system/infrastructure":
+        # print ("This is System/Infrastructure")
+        ocrType = "System OCR"
+        if(csdNo):
+            desc = f'{ocrNO},{csdNo}'
+        else:
+            print("Error: One or more variables are not set. Check OCR_No/CSD_No")
+            doc.Close(False)
+            word.Quit()
+            time.sleep(3)
+            return
+        
     else:
-        print("Error: One or more variables are not set. Check OCR_No/CSD_No OR GIT_No")
+        print("Document type is not matching with data/system")
         doc.Close(False)
         word.Quit()
-        time.sleep(3)
-        return      
-    for box in executionType:
-        # print(box)
-        if "☒ - Yes" in box:
-            ocrType = "Manual"
-        if "☒ - No" in box:
-            ocrType = "Auto"
+        return
 
     doc.Close(False)
     word.Quit()
     # Check if all variables are set (non-empty and not None)
+
     if all([ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity]):
         # Call jsonCreator only if all variables are set
         jsonCreator(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
@@ -170,17 +191,15 @@ def docReader(oneFileName):
         logging.error(f"PowerShell Script Error: {result.stderr}")
         print("PowerShell Error:")
         print(result.stderr)
- 
+
 for oneFile in files_with_path:
+    json_file = 'data.json'
+    with open(json_file, 'w') as f:
+        json.dump({"temp": "temp"}, f)  # Clear the file by writing an empty dictionary
+
     print(f"Working on: {oneFile}")
-    docReader(oneFile)
+    docReader(oneFile)   
 
 input("\nPress Enter to exit...")
 # time.sleep(10)
 sys.exit(0)
-# scripts\activate
-# pyinstaller --onefile --add-data "GetWI.ps1;." --add-data "CreateWI.ps1;." readDocFiles.py
-# pip install pywin32-308-cp312-cp312-win_amd64.whl
-# pip install --no-index --find-links=./ .\setuptools-75.8.0-py3-none-any.whl
-# pip install --no-index --find-links=./ whls\pywin32-308-cp312-cp312-win_amd64.whl
-# pip install --no-index --find-links=./ Azure_APIM\whls\pyinstaller_hooks_contrib-2024.11-py3-none-any.whl

@@ -63,20 +63,54 @@ if (Test-Path $jsonFilePath) {
     Write-Host "The file 'data.json' does not exist in the current folder."
 }
 
+# Determine if the script is running as a standalone executable or as a script from a file
+if ($PSScriptRoot -eq "") {
+    # If running as an executable, $PSScriptRoot will be empty, so we get the directory of the running executable
+    $currentDir = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+} else {
+    # If running as a script, $PSScriptRoot will be the folder where the script is located
+    $currentDir = $PSScriptRoot
+}
+
+$henvFilePath = Join-Path $currentDir "henv.json"
+
+if (Test-Path $henvFilePath) {
+    $henvContent = Get-Content -Path $henvFilePath | ConvertFrom-Json
+} else {
+    Write-Host "The file 'henv.json' does not exist in the current folder."
+}
+
+# $henvFilePath = Join-Path $currentDir "henv.json"
+# if (Test-Path $henvFilePath) {
+#     $henvContent = Get-Content -Path $henvFilePath | ConvertFrom-Json
+# } else {
+#     Write-Host "The file 'henv.json' does not exist in the current folder."
+# }
+# <#
 # Inputs for the Function
 $OCRTitle = $jsonContent.OCRTitle
-$AssignedTo = ""  # User to whom the task will be assigned
-$State = "New"  # State of the work item
+# $AssignedTo = ""  # User to whom the task will be assigned
+$AssignedTo = $henvContent.AssignedTo  # User to whom the task will be assigned
+# $State = "New"  # State of the work item
+$State = $henvContent.State  # State of the work item
 $Tags = $jsonContent.OCRNo
-$AreaPath = "CE\CJS Change Management"
-$iterationPath = "CE\CJS Change Management\CJS Change Management 2024"
+# $AreaPath = "CE\CJS Change Management"
+$AreaPath = $henvContent.AreaPath
+# $iterationPath = "CE\CJS Change Management\CJS Change Management 2024"
+$iterationPath = $henvContent.IterationPath
 $Desc = $jsonContent.Desc
 $OCRType = $jsonContent.OCRType
 $OCRDocType = $jsonContent.OCRDocType #Data for Functional Area
 $Priority = $jsonContent.Priority
-$PAT = "CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO"
-$Type = "User Story"
-#
+# $PAT = "CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO"
+$PAT = $henvContent.PAT
+# $Type = "User Story"
+$Type = $henvContent.Type
+# >
+
+# $jsonContent
+# $henvContent
+
 if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
     -not [string]::IsNullOrWhiteSpace($Tags) -and
     -not [string]::IsNullOrWhiteSpace($AreaPath) -and
