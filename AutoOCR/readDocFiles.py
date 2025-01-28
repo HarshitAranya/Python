@@ -104,10 +104,11 @@ def docReader(oneFileName):
     # print(paragraph_dict)    
     for key, value in paragraph_dict.items():
         # print(f"{key}: {value}")
-        if "Reference" in value and "CSD" not in value:
+        # if "Reference" in value and "CSD" not in value:
+        if value.strip() == "Reference":
             # print(f"{key}: {value}")
             ocrNO = paragraph_dict[key+1]
-        if "Title" in value:
+        if value.strip() == "Title":
             # print(f"{key}: {value}")
             ocrTitle = paragraph_dict[key+1]
         if "Manual Treatment" in value:
@@ -146,7 +147,7 @@ def docReader(oneFileName):
                 ocrType = "Manual"
             if "☒ - No" in box:
                 ocrType = "Auto"                
-    elif ocrDocType.lower() == "system/infrastructure":
+    elif ocrDocType.lower() == "system/infrastructure" or ocrDocType.lower() == "system":
         # print ("This is System/Infrastructure")
         ocrType = "System OCR"
         if(csdNo):
@@ -157,7 +158,28 @@ def docReader(oneFileName):
             word.Quit()
             time.sleep(3)
             return
-        
+    elif ocrDocType.lower() == "reports":
+        # print ("This is System/Infrastructure")
+        ocrType = "Reports"
+        if(csdNo):
+            desc = f'{ocrNO},{csdNo}'
+        else:
+            print("Error: One or more variables are not set. Check OCR_No/CSD_No")
+            doc.Close(False)
+            word.Quit()
+            time.sleep(3)
+            return
+    elif ocrDocType.lower() == "correspondence":
+        # print ("This is System/Infrastructure")
+        ocrType = "Correspondence"
+        if(csdNo):
+            desc = f'{ocrNO},{csdNo}'
+        else:
+            print("Error: One or more variables are not set. Check OCR_No/CSD_No")
+            doc.Close(False)
+            word.Quit()
+            time.sleep(3)
+            return               
     else:
         print("Document type is not matching with data/system")
         doc.Close(False)
