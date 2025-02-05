@@ -1,3 +1,4 @@
+# Importing required packages
 import os
 import sys
 from datetime import datetime
@@ -7,8 +8,10 @@ import json
 import subprocess
 import logging
 
-# Get the directory where the .exe file is located
+print("AutoOCR | Version 5.0")
+# Current date
 currentDate = datetime.now()
+# Get the directory where the .exe file is located
 current_directory = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.realpath(__file__))
 
 # List all .docx files in the current directory
@@ -31,6 +34,7 @@ for docFile in docx_files:
 todaysDate = currentDate.strftime('%d-%b-%Y')
 print(f"Today's Date :{todaysDate}")
 
+# Function to create data.json file
 def jsonCreator(
     ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity
 ):
@@ -64,6 +68,7 @@ def resource_path(relative_path):
 
 ps_CWI = resource_path("CreateWI.ps1")
 
+# Function to collect required information
 def docReader(oneFileName):
 
     # Initialize all variables inside the function
@@ -112,16 +117,23 @@ def docReader(oneFileName):
             # print(f"{key}: {value}")
             ocrTitle = paragraph_dict[key+1]
         if "Manual Treatment" in value:
-            for i in range(key, key+5):
-                executionType.append(paragraph_dict[i])        
+            for i in range(key, key+6):
+                executionType.append(paragraph_dict[i])
+        # elif "Type of SCRA" in value:
+        #     for i in range(key, key+5):
+        #         executionType.append(paragraph_dict[i])               
         if "CSD" in value and "reference" in value.lower():
             csdNo = paragraph_dict[key+1]
         if "Commit Number" in value:
             gitNo = paragraph_dict[key+1]
         if "Data/Code" in value:
-            ocrDocType = paragraph_dict[key+1]
+            ocrDocType = paragraph_dict[key+1]    
         if "Severity" in value:
-            severity = paragraph_dict[key+1]
+            severity = paragraph_dict[key+1]  
+        elif "Reoccurring Operational" in value and "Data/Code" not in value:
+            ocrDocType = "ROCR"
+            severity = "4"
+            ocrType = "NA"     
     if(ocrNO and ocrTitle):
         ocrFullTitle = f'{ocrNO} : {ocrTitle}'
     else:
@@ -130,7 +142,7 @@ def docReader(oneFileName):
         word.Quit()
         time.sleep(3)
         return
-    if ocrDocType.lower() == "data":        
+    if ocrDocType.lower() == "data" or ocrDocType == "ROCR":        
 
         if(csdNo and gitNo):
             desc = f'{ocrNO},{csdNo},{gitNo}'
@@ -189,7 +201,7 @@ def docReader(oneFileName):
     doc.Close(False)
     word.Quit()
     # Check if all variables are set (non-empty and not None)
-
+    # print(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
     if all([ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity]):
         # Call jsonCreator only if all variables are set
         jsonCreator(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
@@ -214,6 +226,7 @@ def docReader(oneFileName):
         print("PowerShell Error:")
         print(result.stderr)
 
+# Calling function for each file
 for oneFile in files_with_path:
     json_file = 'data.json'
     with open(json_file, 'w') as f:

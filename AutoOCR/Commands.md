@@ -2,8 +2,9 @@
 pythom -m venv nameOfenv
 cd nameOfenv
 scripts\activate
+pip install -r requirements.txt
 
-# Packages installations
+# Manual Packages installations
 pip install pywin32-308-cp312-cp312-win_amd64.whl
 pip install --no-index --find-links=./ .\setuptools-75.8.0-py3-none-any.whl
 pip install --no-index --find-links=./ whls\pywin32-308-cp312-cp312-win_amd64.whl

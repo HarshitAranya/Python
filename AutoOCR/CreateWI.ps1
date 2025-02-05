@@ -123,6 +123,7 @@ if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
     -not [string]::IsNullOrWhiteSpace($Type)) {
     
     # Call the function
+    Write-Host "Creating work item"
     Create-WorkItem -PAT $PAT -Type $Type
 } else {
     Write-Host "Error: One or more required variables are not set or invalid."
