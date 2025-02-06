@@ -13,7 +13,7 @@ pip install --no-index --find-links=./ Azure_APIM\whls\pyinstaller_hooks_contrib
 # Create a build
 pyinstaller --onefile --add-data "GetWI.ps1;." --add-data "CreateWI.ps1;." readDocFiles.py
 pyinstaller --onefile --add-data "CreateWI.ps1;." readDocFiles.py
-pyinstaller --onefile --add-data "CreateWI.ps1;." --add-data "henv.json;." readDocFiles.py
+pyinstaller --onefile --add-data "CreateWI.ps1;." --add-data "GetWI.ps1;." --add-data "henv.json;." readDocFiles.py
 
 # PowerShell commands
 $currentDir = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)

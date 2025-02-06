@@ -53,9 +53,10 @@ function Create-WorkItem {
 }
 
 $currentDir = Get-Location
-
 # Define the path to the data.json file
 $jsonFilePath = Join-Path $currentDir "data.json"
+$availableFilePath = Join-Path $currentDir "available.json"
+
 # Check if the file exists
 if (Test-Path $jsonFilePath) {
     $jsonContent = Get-Content -Path $jsonFilePath | ConvertFrom-Json
@@ -63,16 +64,22 @@ if (Test-Path $jsonFilePath) {
     Write-Host "The file 'data.json' does not exist in the current folder."
 }
 
+if (Test-Path $availableFilePath) {
+    $availableContent = Get-Content -Path $availableFilePath | ConvertFrom-Json
+} else {
+    Write-Host "The file 'available.json' does not exist in the current folder."
+}
+
 # Determine if the script is running as a standalone executable or as a script from a file
 if ($PSScriptRoot -eq "") {
     # If running as an executable, $PSScriptRoot will be empty, so we get the directory of the running executable
-    $currentDir = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+    $currentExeDir = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
 } else {
     # If running as a script, $PSScriptRoot will be the folder where the script is located
-    $currentDir = $PSScriptRoot
+    $currentExeDir = $PSScriptRoot
 }
 
-$henvFilePath = Join-Path $currentDir "henv.json"
+$henvFilePath = Join-Path $currentExeDir "henv.json"
 
 if (Test-Path $henvFilePath) {
     $henvContent = Get-Content -Path $henvFilePath | ConvertFrom-Json
@@ -86,6 +93,7 @@ if (Test-Path $henvFilePath) {
 # } else {
 #     Write-Host "The file 'henv.json' does not exist in the current folder."
 # }
+
 # <#
 # Inputs for the Function
 $OCRTitle = $jsonContent.OCRTitle
@@ -123,8 +131,23 @@ if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
     -not [string]::IsNullOrWhiteSpace($Type)) {
     
     # Call the function
-    Write-Host "Creating work item"
-    Create-WorkItem -PAT $PAT -Type $Type
+    
+    foreach ($key in $availableContent.PSObject.Properties.Name) {
+        $value = $availableContent.$key
+        # Write-Host "$key - $value"
+        if ($value -notlike "*$Tags*"){
+            $isExists = $false
+        }
+        else{
+            Write-Host "$Tags - is already exists"
+            $isExists = $true
+            break    # Exit the loop once a match is found
+        }
+    }
+    if (-not $isExists) {
+        Write-Host "Creating work item for $Tags"
+        Create-WorkItem -PAT $PAT -Type $Type
+    }  
 } else {
     Write-Host "Error: One or more required variables are not set or invalid."
 }

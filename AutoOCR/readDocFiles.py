@@ -8,7 +8,7 @@ import json
 import subprocess
 import logging
 
-print("AutoOCR | Version 5.0")
+print("AutoOCR | Version 6.0")
 # Current date
 currentDate = datetime.now()
 # Get the directory where the .exe file is located
@@ -32,7 +32,7 @@ for docFile in docx_files:
         print(f"File Date :{fileDate} | File name :{docFile}")
 
 todaysDate = currentDate.strftime('%d-%b-%Y')
-print(f"Today's Date :{todaysDate}")
+# print(f"Today's Date :{todaysDate}")
 
 # Function to create data.json file
 def jsonCreator(
@@ -67,6 +67,40 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 ps_CWI = resource_path("CreateWI.ps1")
+ps_GWI = resource_path("GetWI.ps1")
+
+# Function to execute PowerShell script
+def execute_powershell_script(ps1_file):
+    # Prepare the PowerShell command
+    ps_command = f'Set-ExecutionPolicy Bypass -Scope Process -Force; . "{ps1_file}"'
+
+    try:
+        # Execute the PowerShell script using subprocess
+        result = subprocess.run(
+            ['powershell', '-NoProfile', '-Command', ps_command],
+            capture_output=True,
+            text=True
+        )
+
+        # Handle PowerShell output
+        logging.info(f"PowerShell Output:")
+        logging.info(result.stdout)
+        print("PowerShell Output:")
+        print(result.stdout)  # Displaying the PowerShell output
+
+        # Check if there was an error executing the script
+        if result.returncode != 0:
+            logging.error(f"PowerShell Script Error: {result.stderr}")
+            print("PowerShell Error:")
+            print(result.stderr)
+    
+    except Exception as e:
+        # Catch and log any exceptions
+        logging.error(f"Exception occurred: {str(e)}")
+        print(f"Exception occurred: {str(e)}")
+
+# Example usage of the function
+execute_powershell_script(ps_GWI)
 
 # Function to collect required information
 def docReader(oneFileName):
@@ -201,30 +235,31 @@ def docReader(oneFileName):
     doc.Close(False)
     word.Quit()
     # Check if all variables are set (non-empty and not None)
-    # print(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
+    # print(f"ocrFullTitle: {ocrFullTitle}, ocrNO: {ocrNO}, desc: {desc}, ocrType: {ocrType}, ocrDocType: {ocrDocType}, severity: {severity}")
     if all([ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity]):
         # Call jsonCreator only if all variables are set
         jsonCreator(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
     else:
         print("Error: One or more variables are not set.")
 
-    ps_command = f'Set-ExecutionPolicy Bypass -Scope Process -Force; . "{ps_CWI}"'
-    result = subprocess.run(
-        ['powershell', '-NoProfile', '-Command', ps_command],
-        capture_output=True,
-        text=True
-    )
+    execute_powershell_script(ps_CWI)
+    # ps_command = f'Set-ExecutionPolicy Bypass -Scope Process -Force; . "{ps_CWI}"'
+    # result = subprocess.run(
+    #     ['powershell', '-NoProfile', '-Command', ps_command],
+    #     capture_output=True,
+    #     text=True
+    # )
 
-    # Handle PowerShell output
-    logging.info(f"PowerShell Output:")
-    logging.info(result.stdout)
-    print("PowerShell Output:")
-    print(result.stdout)  # Displaying the PowerShell output
+    # # Handle PowerShell output
+    # logging.info(f"PowerShell Output:")
+    # logging.info(result.stdout)
+    # print("PowerShell Output:")
+    # print(result.stdout)  # Displaying the PowerShell output
 
-    if result.returncode != 0:
-        logging.error(f"PowerShell Script Error: {result.stderr}")
-        print("PowerShell Error:")
-        print(result.stderr)
+    # if result.returncode != 0:
+    #     logging.error(f"PowerShell Script Error: {result.stderr}")
+    #     print("PowerShell Error:")
+    #     print(result.stderr)
 
 # Calling function for each file
 for oneFile in files_with_path:
