@@ -8,7 +8,7 @@ import json
 import subprocess
 import logging
 
-print("AutoOCR | Version 6.0")
+print("AutoOCR | Version 7.0")
 # Current date
 currentDate = datetime.now()
 # Get the directory where the .exe file is located
@@ -114,6 +114,17 @@ def execute_powershell_script(ps1_file):
 
 # Example usage of the function
 execute_powershell_script(ps_GWI)
+
+# Load the JSON file
+with open("available.json", "r") as file:
+    existingData = json.load(file)
+
+# Check if the dictionary is empty
+if not existingData:
+    print("Validation failed with existing OCR/ROCR  | available.json should not be empty...")
+    # exit(1)  # Exit with a non-zero code
+    time.sleep(3)
+    sys.exit(0)
 
 # Function to collect required information
 def docReader(oneFileName):
