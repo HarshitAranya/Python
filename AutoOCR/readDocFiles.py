@@ -18,9 +18,22 @@ current_directory = os.path.dirname(sys.executable) if getattr(sys, 'frozen', Fa
 docx_files = [f for f in os.listdir(current_directory) if f.endswith('.docx')]
 
 if(len(docx_files) == 0):
-    print("No file found in current directory!!")
+    print("No OCR/ROCR/.docx file found in current directory!!")
     time.sleep(3)
     sys.exit(0)
+
+# Check if PAT.txt exists in the current directory
+# if not os.path.exists(os.path.join(current_directory, "PAT.txt")):
+#     print("PAT.txt file not found in the current directory!!")
+#     time.sleep(3)
+#     sys.exit(0)
+# Check if PAT.txt exists and is not empty
+# Get the full path of PAT.txt
+pat_file_path = os.path.join(current_directory, "PAT.txt")
+if not os.path.exists(pat_file_path) or os.path.getsize(pat_file_path) == 0:
+    print("PAT.txt file not found or is empty!!")
+    time.sleep(3)
+    sys.exit(0)    
 
 files_with_path = []
 for docFile in docx_files:
@@ -157,7 +170,10 @@ def docReader(oneFileName):
         #     for i in range(key, key+5):
         #         executionType.append(paragraph_dict[i])               
         if "CSD" in value and "reference" in value.lower():
+            # print(f"{key}: {value}")
             csdNo = paragraph_dict[key+1]
+            csdNo = csdNo.replace(" ", "")
+            # print(csdNo)
         if "Commit Number" in value:
             gitNo = paragraph_dict[key+1]
         if "Data/Code" in value:
@@ -193,7 +209,7 @@ def docReader(oneFileName):
                 ocrType = "Manual"
             if "☒ - No" in box:
                 ocrType = "Auto"                
-    elif ocrDocType.lower() == "system/infrastructure" or ocrDocType.lower() == "system":
+    elif ocrDocType.lower() == "system/infrastructure" or ocrDocType.lower() == "system" or ocrDocType.lower() == "system upgrade" or ocrDocType == "RPA":
         # print ("This is System/Infrastructure")
         ocrType = "System OCR"
         if(csdNo):
@@ -227,7 +243,7 @@ def docReader(oneFileName):
             time.sleep(3)
             return               
     else:
-        print("Document type is not matching with data/system")
+        print("Document type is not matching with Data/System/Reports/RPA")
         doc.Close(False)
         word.Quit()
         return

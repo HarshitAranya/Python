@@ -1,5 +1,15 @@
 ﻿[System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
 
+$currentDir = Get-Location
+$patFilePath = Join-Path $currentDir "PAT.txt"
+$PAT = Get-Content -Path $patFilePath
+# Write-Host "This is pat - $PAT"
+# CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO
+# if(!$PAT){
+#     Write-Host "Please update PAT in PAT.txt file"
+#     exit
+# }
+
 # Determine if the script is running as a standalone executable or as a script from a file
 if ($PSScriptRoot -eq "") {
     # If running as an executable, $PSScriptRoot will be empty, so we get the directory of the running executable
@@ -17,7 +27,7 @@ if (Test-Path $henvFilePath) {
     Write-Host "The file 'henv.json' does not exist in the current folder."
 }
 
-$PAT = $henvContent.PAT
+# $PAT = $henvContent.PAT
 $Query_existingItems = $henvContent.Query_existingItems
 
 function boardsdata(){

@@ -1,5 +1,33 @@
 [System.Net.WebRequest]::DefaultWebProxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
 
+$currentDir = Get-Location
+# Define the path to the data.json file
+$patFilePath = Join-Path $currentDir "PAT.txt"
+$jsonFilePath = Join-Path $currentDir "data.json"
+$availableFilePath = Join-Path $currentDir "available.json"
+
+$PAT = Get-Content -Path $patFilePath
+# Write-Host "This is pat - $PAT"
+# CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO
+# if(!$PAT){
+#     Write-Host "Please update PAT in PAT.txt file"
+#     exit
+# }
+
+# Check if the file exists
+if (Test-Path $jsonFilePath) {
+    $jsonContent = Get-Content -Path $jsonFilePath | ConvertFrom-Json
+} else {
+    Write-Host "The file 'data.json' does not exist in the current folder."
+}
+
+if (Test-Path $availableFilePath) {
+    $availableContent = Get-Content -Path $availableFilePath | ConvertFrom-Json
+} else {
+    Write-Host "The file 'available.json' does not exist in the current folder."
+}
+
+
 function Create-WorkItem {
     param (
         [string]$PAT
@@ -52,24 +80,6 @@ function Create-WorkItem {
     }
 }
 
-$currentDir = Get-Location
-# Define the path to the data.json file
-$jsonFilePath = Join-Path $currentDir "data.json"
-$availableFilePath = Join-Path $currentDir "available.json"
-
-# Check if the file exists
-if (Test-Path $jsonFilePath) {
-    $jsonContent = Get-Content -Path $jsonFilePath | ConvertFrom-Json
-} else {
-    Write-Host "The file 'data.json' does not exist in the current folder."
-}
-
-if (Test-Path $availableFilePath) {
-    $availableContent = Get-Content -Path $availableFilePath | ConvertFrom-Json
-} else {
-    Write-Host "The file 'available.json' does not exist in the current folder."
-}
-
 # Determine if the script is running as a standalone executable or as a script from a file
 if ($PSScriptRoot -eq "") {
     # If running as an executable, $PSScriptRoot will be empty, so we get the directory of the running executable
@@ -111,7 +121,8 @@ $OCRType = $jsonContent.OCRType
 $OCRDocType = $jsonContent.OCRDocType #Data for Functional Area
 $Priority = $jsonContent.Priority
 # $PAT = "CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO"
-$PAT = $henvContent.PAT
+# $PAT
+# $PAT = $henvContent.PAT
 # $Type = "User Story"
 $Type = $henvContent.Type
 # >
