@@ -8,7 +8,7 @@ import json
 import subprocess
 import logging
 
-print("AutoOCR | Version 7.0")
+print("AutoOCR | Version 7.1")
 # Current date
 currentDate = datetime.now()
 # Get the directory where the .exe file is located
@@ -191,7 +191,7 @@ def docReader(oneFileName):
             ocrDocType = paragraph_dict[key+1]    
         if "Severity" in value:
             severity = paragraph_dict[key+1]  
-        elif "Reoccurring Operational" in value and "Data/Code" not in value:
+        elif "Reoccurring Operational" in value or "Standard Change Request Article (SCRA)" in value and "Data/Code" not in value:
             ocrDocType = "ROCR"
             severity = "4"
             ocrType = "NA"     

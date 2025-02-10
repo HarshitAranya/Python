@@ -127,7 +127,7 @@ $Priority = $jsonContent.Priority
 $Type = $henvContent.Type
 # >
 
-# $jsonContent
+$jsonContent
 # $henvContent
 
 if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
@@ -157,7 +157,7 @@ if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
     }
     if (-not $isExists) {
         Write-Host "Creating work item for $Tags"
-        Create-WorkItem -PAT $PAT -Type $Type
+        # Create-WorkItem -PAT $PAT -Type $Type
     }  
 } else {
     Write-Host "Error: One or more required variables are not set or invalid."
