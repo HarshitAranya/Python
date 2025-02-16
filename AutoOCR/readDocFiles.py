@@ -8,7 +8,7 @@ import json
 import subprocess
 import logging
 
-print("AutoOCR | Version 7.1")
+print("AutoOCR | Version 7.2")
 # Current date
 currentDate = datetime.now()
 # Get the directory where the .exe file is located

@@ -67,8 +67,12 @@ function Create-WorkItem {
 		,@{ "op" = "add"; "path" = "/fields/CivicaAgile.FunctionalArea"; "value" = $OCRDocType }
 		,@{ "op" = "add"; "path" = "/fields/Microsoft.VSTS.CMMI.ImpactAssessmentHtml"; "value" = "NA" }
 		,@{ "op" = "add"; "path" = "/fields/Microsoft.VSTS.Common.Priority"; "value" = $Priority }
+		,@{ "op" = "add"; "path" = "/fields/Custom.VIEWPerformanceAnalysisComplete"; "value" = "N/A" }
+        ,@{ "op" = "add"; "path" = "/fields/Custom.VIEWPerformanceSuiteUpdateRequired"; "value" = "No" }
+        ,@{ "op" = "add"; "path" = "/fields/Custom.VIEWPerformanceTestAdded"; "value" = "No" }
     ) | ConvertTo-Json -Depth 10
-
+    # 
+    # 
     # Execute the POST Request
     try {
         $response = Invoke-RestMethod -Uri $url -Headers $Headers -Method POST -Body $Body
@@ -127,7 +131,7 @@ $Priority = $jsonContent.Priority
 $Type = $henvContent.Type
 # >
 
-$jsonContent
+# $jsonContent
 # $henvContent
 
 if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
@@ -157,7 +161,7 @@ if (-not [string]::IsNullOrWhiteSpace($OCRTitle) -and
     }
     if (-not $isExists) {
         Write-Host "Creating work item for $Tags"
-        # Create-WorkItem -PAT $PAT -Type $Type
+        Create-WorkItem -PAT $PAT -Type $Type
     }  
 } else {
     Write-Host "Error: One or more required variables are not set or invalid."

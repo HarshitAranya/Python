@@ -68,8 +68,11 @@ function boardsdata(){
 # $existingItems
 $existingItemsList = @()
 $existingItems = boardsdata -PAT $PAT -Query $Query_existingItems
+# $existingItemsList | Get-Member 
 
-# $existingItemsList | Get-Member
+# $temp1 = $existingItems | Where-Object { $_.'System.Tags' -eq "Awaiting Hypercare completion 26/02; OCR25046; RPA" }
+# $temp1 | Format-List *
+
 $existingItemsList = $existingItems | Select-Object System.Tags, @{Name='Description'; Expression={$_.('System.Description') -replace '<[^>]*>', ''}}
 
 $availableData = @{}
