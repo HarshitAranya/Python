@@ -8,36 +8,47 @@ import json
 import subprocess
 import logging
 
-print("AutoOCR | Version 7.2")
+# Printing version of this utility.
+print("AutoOCR | Version 7.3")
 # Current date
 currentDate = datetime.now()
-# Get the directory where the .exe file is located
+# if exe, gets the directory containing the executable. | if not exe, gets the absolute path of the script
 current_directory = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.realpath(__file__))
 
 # List all .docx files in the current directory
-docx_files = [f for f in os.listdir(current_directory) if f.endswith('.docx')]
+# docx_files = [f for f in os.listdir(current_directory) if f.endswith('.docx')]
 
+# Set the target directory to one level up from current directory
+if getattr(sys, 'frozen', False):
+    target_directory = os.path.dirname(os.path.dirname(sys.executable))  # When running as an executable
+else:
+    target_directory = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))  # When running as a script
+
+# print(target_directory)
+
+# List all .docx files in the target directory
+docx_files = [f for f in os.listdir(target_directory) if f.endswith('.docx')]
+
+print("DOCX Files:", docx_files)
+
+# Error if no word file found.
 if(len(docx_files) == 0):
     print("No OCR/ROCR/.docx file found in current directory!!")
     time.sleep(3)
     sys.exit(0)
 
-# Check if PAT.txt exists in the current directory
-# if not os.path.exists(os.path.join(current_directory, "PAT.txt")):
-#     print("PAT.txt file not found in the current directory!!")
-#     time.sleep(3)
-#     sys.exit(0)
-# Check if PAT.txt exists and is not empty
-# Get the full path of PAT.txt
+# Error if no PAT.exe found OR empty.
 pat_file_path = os.path.join(current_directory, "PAT.txt")
 if not os.path.exists(pat_file_path) or os.path.getsize(pat_file_path) == 0:
     print("PAT.txt file not found or is empty!!")
     time.sleep(3)
     sys.exit(0)    
 
+# Printing list of all available word file with file date. 
 files_with_path = []
 for docFile in docx_files:
-        docFile_path = os.path.join(current_directory, docFile)
+        # docFile_path = os.path.join(current_directory, docFile)
+        docFile_path = os.path.join(target_directory, docFile)
         files_with_path.append(docFile_path)
         file_time = os.path.getmtime(docFile_path)
         file_Datetime = datetime.fromtimestamp(file_time)
@@ -47,9 +58,9 @@ for docFile in docx_files:
 todaysDate = currentDate.strftime('%d-%b-%Y')
 # print(f"Today's Date :{todaysDate}")
 
-# Function to create data.json file
+# Function to create data.json file | The data.json will be used by CreateWI.ps1 to create work item.
 def jsonCreator(
-    ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity
+    ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity, preparedBy
 ):
     data = {
         "OCRTitle": ocrFullTitle,        
@@ -58,6 +69,7 @@ def jsonCreator(
         "OCRType": ocrType,
         "OCRDocType": ocrDocType,
         "Priority": severity,
+        "PreparedBy": preparedBy,
     }
     # Overwrite the JSON file with an empty dictionary before updating with new data
     json_file = 'data.json'
@@ -70,7 +82,7 @@ def jsonCreator(
 
     print(f"JSON file '{json_file}' created/updated successfully.")
 
-# Adjust paths for bundled files
+# Adjust paths for bundled files to execute PowerShell script
 def resource_path(relative_path):
     """Get the absolute path to a resource, accounting for PyInstaller bundling."""
     try:
@@ -79,6 +91,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+# Set PowerShell script with full path
 ps_CWI = resource_path("CreateWI.ps1")
 ps_GWI = resource_path("GetWI.ps1")
 
@@ -99,20 +112,20 @@ def execute_powershell_script(ps1_file):
         logging.info(f"PowerShell Output:")
         logging.info(result.stdout)
         print("PowerShell Output:")
-        print(result.stdout)  # Displaying the PowerShell output
+        print(result.stdout)  # Displaying the PowerShell output which user can see
 
         # Check if there was an error executing the script
         if result.returncode != 0:
             logging.error(f"PowerShell Script Error: {result.stderr}")
             print("PowerShell Error:")
-            print(result.stderr)
+            print(result.stderr) # Displaying the PowerShell output which user can see
     
     except Exception as e:
         # Catch and log any exceptions
         logging.error(f"Exception occurred: {str(e)}")
         print(f"Exception occurred: {str(e)}")
 
-# Example usage of the function
+# Execution of GetWI.ps1 to get all available OCR from ADO. It will use PAT.txt, henv.json and create\update vailable.json
 execute_powershell_script(ps_GWI)
 
 # Load the JSON file
@@ -132,6 +145,7 @@ def docReader(oneFileName):
     # Initialize all variables inside the function
     ocrNO = ""
     ocrTitle = ""
+    preparedBy = ""
     csdNo = ""
     gitNo = ""
     desc = ""
@@ -174,6 +188,9 @@ def docReader(oneFileName):
         if value.strip() == "Title":
             # print(f"{key}: {value}")
             ocrTitle = paragraph_dict[key+1]
+        if "Change Document Prepared By" in value:
+            preparedBy = paragraph_dict[key+1]
+            #print(preparedBy)    
         if "Manual Treatment" in value:
             for i in range(key, key+6):
                 executionType.append(paragraph_dict[i])
@@ -219,7 +236,8 @@ def docReader(oneFileName):
             if "☒ - Yes" in box:
                 ocrType = "Manual"
             if "☒ - No" in box:
-                ocrType = "Auto"                
+                ocrType = "Auto"
+    # For template V15 - OCR Template - System - Infrastructure                            
     elif ocrDocType.lower() == "system/infrastructure" or ocrDocType.lower() == "system" or ocrDocType.lower() == "system upgrade" or ocrDocType == "RPA":
         # print ("This is System/Infrastructure")
         ocrType = "System OCR"
@@ -231,8 +249,8 @@ def docReader(oneFileName):
             word.Quit()
             time.sleep(3)
             return
+    # For template V13 - OCR Template - Reports    
     elif ocrDocType.lower() == "reports":
-        # print ("This is System/Infrastructure")
         ocrType = "Reports"
         if(csdNo):
             desc = f'{ocrNO},{csdNo}'
@@ -242,8 +260,8 @@ def docReader(oneFileName):
             word.Quit()
             time.sleep(3)
             return
+    # For template V13 - OCR Template - Correspondence    
     elif ocrDocType.lower() == "correspondence":
-        # print ("This is System/Infrastructure")
         ocrType = "Correspondence"
         if(csdNo):
             desc = f'{ocrNO},{csdNo}'
@@ -261,34 +279,18 @@ def docReader(oneFileName):
 
     doc.Close(False)
     word.Quit()
+    # Update data.json
     # Check if all variables are set (non-empty and not None)
     # print(f"ocrFullTitle: {ocrFullTitle}, ocrNO: {ocrNO}, desc: {desc}, ocrType: {ocrType}, ocrDocType: {ocrDocType}, severity: {severity}")
     if all([ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity]):
         # Call jsonCreator only if all variables are set
-        jsonCreator(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity)
+        jsonCreator(ocrFullTitle, ocrNO, desc, ocrType, ocrDocType, severity, preparedBy)
     else:
         print("Error: One or more variables are not set.")
-
+    # Execution of CreateWI.ps1 to create work item on ADO. It will read vailable.json, data.json and PAT.txt
     execute_powershell_script(ps_CWI)
-    # ps_command = f'Set-ExecutionPolicy Bypass -Scope Process -Force; . "{ps_CWI}"'
-    # result = subprocess.run(
-    #     ['powershell', '-NoProfile', '-Command', ps_command],
-    #     capture_output=True,
-    #     text=True
-    # )
 
-    # # Handle PowerShell output
-    # logging.info(f"PowerShell Output:")
-    # logging.info(result.stdout)
-    # print("PowerShell Output:")
-    # print(result.stdout)  # Displaying the PowerShell output
-
-    # if result.returncode != 0:
-    #     logging.error(f"PowerShell Script Error: {result.stderr}")
-    #     print("PowerShell Error:")
-    #     print(result.stderr)
-
-# Calling function for each file
+# Calling function for each word file
 for oneFile in files_with_path:
     json_file = 'data.json'
     with open(json_file, 'w') as f:

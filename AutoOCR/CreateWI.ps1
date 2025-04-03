@@ -7,12 +7,6 @@ $jsonFilePath = Join-Path $currentDir "data.json"
 $availableFilePath = Join-Path $currentDir "available.json"
 
 $PAT = Get-Content -Path $patFilePath
-# Write-Host "This is pat - $PAT"
-# CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO
-# if(!$PAT){
-#     Write-Host "Please update PAT in PAT.txt file"
-#     exit
-# }
 
 # Check if the file exists
 if (Test-Path $jsonFilePath) {
@@ -26,7 +20,6 @@ if (Test-Path $availableFilePath) {
 } else {
     Write-Host "The file 'available.json' does not exist in the current folder."
 }
-
 
 function Create-WorkItem {
     param (
@@ -59,7 +52,7 @@ function Create-WorkItem {
         @{ "op" = "add"; "path" = "/fields/System.Title"; "value" = $OCRTitle }
         ,@{ "op" = "add"; "path" = "/fields/System.AssignedTo"; "value" = $AssignedTo }
         ,@{ "op" = "add"; "path" = "/fields/System.State"; "value" = $State }
-        ,@{ "op" = "add"; "path" = "/fields/System.Tags"; "value" = $Tags }
+        ,@{ "op" = "add"; "path" = "/fields/System.Tags"; "value" = $nTags }
 		,@{ "op" = "add"; "path" = "/fields/System.AreaPath"; "value" = $AreaPath }
 		,@{ "op" = "add"; "path" = "/fields/System.IterationPath"; "value" = $iterationPath }        
 		,@{ "op" = "add"; "path" = "/fields/System.Description"; "value" = $Desc }
@@ -101,35 +94,21 @@ if (Test-Path $henvFilePath) {
     Write-Host "The file 'henv.json' does not exist in the current folder."
 }
 
-# $henvFilePath = Join-Path $currentDir "henv.json"
-# if (Test-Path $henvFilePath) {
-#     $henvContent = Get-Content -Path $henvFilePath | ConvertFrom-Json
-# } else {
-#     Write-Host "The file 'henv.json' does not exist in the current folder."
-# }
 
-# <#
 # Inputs for the Function
 $OCRTitle = $jsonContent.OCRTitle
-# $AssignedTo = ""  # User to whom the task will be assigned
 $AssignedTo = $henvContent.AssignedTo  # User to whom the task will be assigned
-# $State = "New"  # State of the work item
 $State = $henvContent.State  # State of the work item
 $Tags = $jsonContent.OCRNo
-# $AreaPath = "CE\CJS Change Management"
 $AreaPath = $henvContent.AreaPath
-# $iterationPath = "CE\CJS Change Management\CJS Change Management 2024"
 $iterationPath = $henvContent.IterationPath
 $Desc = $jsonContent.Desc
 $OCRType = $jsonContent.OCRType
 $OCRDocType = $jsonContent.OCRDocType #Data for Functional Area
 $Priority = $jsonContent.Priority
-# $PAT = "CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO"
-# $PAT
-# $PAT = $henvContent.PAT
-# $Type = "User Story"
+$PreparedBy = $jsonContent.PreparedBy
+$nTags = ($Tags, $PreparedBy) -join ";"
 $Type = $henvContent.Type
-# >
 
 # $jsonContent
 # $henvContent
