@@ -94,7 +94,13 @@ if (Test-Path $henvFilePath) {
     Write-Host "The file 'henv.json' does not exist in the current folder."
 }
 
-
+# $henvFilePath = Join-Path $currentDir "henv.json"
+# if (Test-Path $henvFilePath) {
+#     $henvContent = Get-Content -Path $henvFilePath | ConvertFrom-Json
+# } else {
+#     Write-Host "The file 'henv.json' does not exist in the current folder."
+# }
+# <#
 # Inputs for the Function
 $OCRTitle = $jsonContent.OCRTitle
 $AssignedTo = $henvContent.AssignedTo  # User to whom the task will be assigned
@@ -106,8 +112,9 @@ $Desc = $jsonContent.Desc
 $OCRType = $jsonContent.OCRType
 $OCRDocType = $jsonContent.OCRDocType #Data for Functional Area
 $Priority = $jsonContent.Priority
-$PreparedBy = $jsonContent.PreparedBy
-$nTags = ($Tags, $PreparedBy) -join ";"
+# $PAT = "CdD7vTeUJtaurHKbTiYYEG6Z0dIVSHh22zC1XDnV1IXQK2UUT8nCJQQJ99BAACAAAAANjyhyAAASAZDOOLeO"
+$PAT = $henvContent.PAT
+# $Type = "User Story"
 $Type = $henvContent.Type
 
 # $jsonContent
